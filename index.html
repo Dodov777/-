@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Светофор - Администратор</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            color: #333;
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .item {
+            border: 2px solid #007BFF;
+            padding: 15px;
+            margin-bottom: 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        .item img {
+            max-width: 100px;
+            height: auto;
+            margin-right: 20px;
+            border-radius: 8px;
+        }
+        .item-details {
+            flex-grow: 1;
+        }
+        .item button {
+            background-color: #ff6347;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            margin-left: 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .item button:hover {
+            background-color: #d64531;
+        }
+        form {
+            margin-bottom: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            animation: slideIn 1s ease-in-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        form label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #007BFF;
+        }
+        form input, form textarea, form select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        form button {
+            padding: 12px 24px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        form button:hover {
+            background-color: #45a049;
+        }
+        .category-icon {
+            margin-right: 10px;
+            font-size: 24px;
+            color: #007BFF;
+        }
+        #categoryFilter {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+        }
+        img {
+            width: 265px;
+            height: 100px;
+            position: center;
+        }
+        .aligncenter {
+            text-align: center;
+        }
+        br {
+            color: #ccc;
+        }
+        @media (max-width: 600px) {
+            .item img {
+                max-width: 80px;
+            }
+            .item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .item-details {
+                margin-top: 10px;
+            }
+        }
+    </style>
+    <p class="aligncenter">
+        <img src="123.png" alt="">
+    </p>
+</head>
+<body>
+
+    <h1>Управление товарами - Администратор</h1>
+
+    <form id="addItemForm">
+        <label for="category">Категория:</label>
+        <select id="category" required>
+            <option value="canned">Консервированная и замороженная продукция</option>
+            <option value="tea-coffee">Чай, кофе</option>
+            <option value="dairy">Молочная продукция</option>
+            <option value="household">Посуда, хоз. товары и мебель</option>
+            <option value="chemicals">Бытовая химия</option>
+        </select>
+        <br>
+        <label for="name">Название товара:</label>
+        <input type="text" id="name" required>
+        <br>
+        <label for="description">Описание товара:</label>
+        <textarea id="description"></textarea>
+        <br>
+        <label for="photo">Фото товара:</label>
+        <input type="file" id="photo" accept="image/*" required>
+        <br>
+        <button type="submit">Добавить товар</button>
+    </form>
+
+    <select id="categoryFilter">
+        <option value="all">Все категории</option>
+        <option value="canned">Консервированная и замороженная продукция</option>
+        <option value="tea-coffee">Чай, кофе</option>
+        <option value="dairy">Молочная продукция</option>
+        <option value="household">Посуда, хоз. товары и мебель</option>
+        <option value="chemicals">Бытовая химия</option>
+    </select>
+
+    <div id="itemsContainer"></div>
+
+    <script>
+        // Загрузка товаров из localStorage при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            const items = JSON.parse(localStorage.getItem('items')) || [];
+            items.forEach(item => addItem(item.category, item.name, item.description, item.photoSrc));
+            filterItems('all');
+        });
+
+        document.getElementById('addItemForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const category = document.getElementById('category').value;
+            const name = document.getElementById('name').value;
+            const description = document.getElementById('description').value;
+            const photoInput = document.getElementById('photo');
+
+            if (name && photoInput.files.length > 0) {
+                const photoFile = photoInput.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const photoSrc = e.target.result;
+                    addItem(category, name, description, photoSrc);
+                    saveItem(category, name, description, photoSrc);
+                    document.getElementById('name').value = '';
+                    document.getElementById('description').value = '';
+                    photoInput.value = '';
+                    filterItems(document.getElementById('categoryFilter').value);
+                };
+
+                reader.readAsDataURL(photoFile);
+            }
+        });
+
+        document.getElementById('categoryFilter').addEventListener('change', function() {
+            filterItems(this.value);
+        });
+
+        function addItem(category, name, description, photoSrc) {
+            const container = document.getElementById('itemsContainer');
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'item';
+            itemDiv.dataset.category = category;
+
+            const categoryIcon = document.createElement('i');
+            categoryIcon.className = `category-icon ${getCategoryIcon(category)}`;
+
+            const itemPhoto = document.createElement('img');
+            itemPhoto.src = photoSrc;
+
+            const itemDetails = document.createElement('div');
+            itemDetails.className = 'item-details';
+
+            const itemName = document.createElement('h2');
+            itemName.textContent = name;
+
+            const itemDescription = document.createElement('p');
+            itemDescription.textContent = description;
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Удалить';
+            removeButton.addEventListener('click', function() {
+                container.removeChild(itemDiv);
+                removeItem(category, name, description, photoSrc);
+                filterItems(document.getElementById('categoryFilter').value);
+            });
+
+            itemDetails.appendChild(itemName);
+            itemDetails.appendChild(itemDescription);
+            itemDiv.appendChild(categoryIcon);
+            itemDiv.appendChild(itemPhoto);
+            itemDiv.appendChild(itemDetails);
+            itemDiv.appendChild(removeButton);
+
+            container.appendChild(itemDiv);
+        }
+
+        function saveItem(category, name, description, photoSrc) {
+            const items = JSON.parse(localStorage.getItem('items')) || [];
+            items.push({ category, name, description, photoSrc });
+            localStorage.setItem('items', JSON.stringify(items));
+        }
+
+        function removeItem(category, name, description, photoSrc) {
+            const items = JSON.parse(localStorage.getItem('items')) || [];
+            const updatedItems = items.filter(item => !(item.category === category && item.name === name && item.description === description && item.photoSrc === photoSrc));
+            localStorage.setItem('items', JSON.stringify(updatedItems));
+        }
+
+        function getCategoryIcon(category) {
+            switch (category) {
+                case 'canned':
+                    return 'fas fa-snowflake';
+                case 'tea-coffee':
+                    return 'fas fa-mug-hot';
+                case 'dairy':
+                    return 'fas fa-cheese';
+                case 'household':
+                    return 'fas fa-couch';
+                case 'chemicals':
+                    return 'fas fa-flask';
+                default:
+                    return 'fas fa-box';
+            }
+        }
+
+        function filterItems(category) {
+            const items = document.querySelectorAll('.item');
+            items.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
